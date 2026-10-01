@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Voice Lock Screen</string>
+    <string name="app_subtitle">Khóa màn hình bằng giọng nói Offline với Sherpa-ONNX KWS</string>
+    <string name="service_title">Voice Lock Screen Service</string>
+    <string name="service_desc">Lắng nghe sự kiện mở màn hình để tự động kích hoạt khóa giọng nói</string>
+    <string name="enable_service">Bật Màn Hình Khóa Giọng Nói</string>
+    <string name="system_permissions_title">Quyền Hệ Thống</string>
+    <string name="grant_audio_permission">Cấp Quyền Ghi Âm (Microphone)</string>
+    <string name="grant_overlay_permission">Cấp Quyền Hiển Thị Trên Ứng Dụng Khác (Overlay)</string>
+    <string name="password_config_title">Cấu Hình Mật Khẩu</string>
+    <string name="passphrase_title">Mật Khẩu Khẩu Lệnh (Passphrase)</string>
+    <string name="default_passphrase">OPEN PHONE</string>
+    <string name="pin_title">Mã PIN Dự Phòng</string>
+    <string name="default_pin">1234</string>
+    <string name="save_settings">Lưu Cài Đặt</string>
+    <string name="test_lock_screen_now">Thử Nghiệm Màn Hình Khóa Ngay</string>
+
+    <string name="voice_lock_title">VOICE LOCK SCREEN</string>
+    <string name="say_passphrase_format">Nói khẩu lệnh: \"%1$s\"</string>
+    <string name="say_passphrase">Hãy nói mật khẩu để mở khóa</string>
+    <string name="listening_status">Đang lắng nghe khẩu lệnh…</string>
+    <string name="recognized_format">Nhận diện được: \"%1$s\"</string>
+    <string name="enter_pin">Nhập Mã PIN Dự Phòng</string>
+    <string name="hint_enter_pin">Nhập mã PIN</string>
+    <string name="pin_incorrect">Mã PIN không chính xác, vui lòng thử lại!</string>
+    <string name="unlocked_success">Đã mở khóa thành công!</string>
+    <string name="lock_icon_desc">Lock Icon</string>
+    <string name="mic_icon_desc">Microphone Icon</string>
+    <string name="btn_cancel">Hủy</string>
+    <string name="btn_confirm">Xác Nhận</string>
+
+    <string name="grant_permissions">Cấp Quyền Ứng Dụng</string>
+    <string name="model_status_ok">Trạng thái Mô hình KWS: Sẵn sàng</string>
+    <string name="model_status_missing">Trạng thái Mô hình: Chưa tải mô hình ONNX</string>
+
+    <string name="err_no_record_audio_perm">Chưa cấp quyền Ghi Âm (RECORD_AUDIO)</string>
+    <string name="err_no_model_assets">Chưa tìm thấy mô hình KWS trong assets!</string>
+    <string name="msg_check_model_assets">Vui lòng kiểm tra mô hình trong assets!</string>
+    <string name="err_init_stream_failed">Lỗi khởi tạo luồng nhận diện</string>
+    <string name="err_init_mic_failed">Lỗi mở Micro (Kiểm tra quyền ghi âm)</string>
+
+    <string name="msg_say_passphrase_or_pin">Hãy nói khẩu lệnh hoặc nhập PIN để mở khóa!</string>
+    <string name="msg_enter_passphrase_prompt">Vui lòng nhập khẩu lệnh!</string>
+    <string name="msg_pin_length_prompt">Mã PIN phải từ 4-6 chữ số!</string>
+    <string name="msg_settings_saved">Đã lưu cài đặt!</string>
+    <string name="msg_grant_perms_first">Vui lòng cấp đủ quyền ghi âm và overlay trước!</string>
+    <string name="msg_audio_perm_granted">Đã cấp quyền ghi âm</string>
+    <string name="msg_audio_perm_denied">Quyền ghi âm bị từ chối!</string>
+    <string name="msg_overlay_perm_granted">Đã cấp quyền Overlay!</string>
+    <string name="service_active_notification">Dịch vụ đang hoạt động và lắng nghe mở màn hình</string>
+    <string name="service_notification_title">Voice Lock Screen Active</string>
+    <string name="service_channel_name">Voice Lock Screen Service Channel</string>
+</resources>
