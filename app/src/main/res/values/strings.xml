@@ -16,6 +16,14 @@
     <string name="save_settings">Lưu Cài Đặt</string>
     <string name="test_lock_screen_now">Thử Nghiệm Màn Hình Khóa Ngay</string>
 
+    <string name="solution_select_prompt">Chọn Giải Pháp Mở Khóa Bằng Giọng Nói:</string>
+    <string name="solution1_title">1. Sherpa-ONNX (Offline KWS)</string>
+    <string name="solution2_title">2. Picovoice Porcupine &amp; Eagle</string>
+    <string name="solution3_title">3. Microsoft Azure Speaker AI</string>
+    <string name="solution4_title">4. Tự Dựng GPU Backend (FastAPI)</string>
+    <string name="solution5_title">5. Native Android OS STT (CH Play)</string>
+    <string name="solution6_title">6. Challenge-Response Biometrics</string>
+
     <string name="voice_lock_title">VOICE LOCK SCREEN</string>
     <string name="say_passphrase_format">Nói khẩu lệnh: \"%1$s\"</string>
     <string name="say_passphrase">Hãy nói mật khẩu để mở khóa</string>

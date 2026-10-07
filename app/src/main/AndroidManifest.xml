@@ -3,6 +3,8 @@
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -31,7 +33,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Lock Screen Overlay Activity -->
+        <!-- Solution 1: Lock Screen Overlay Activity (Sherpa-ONNX) -->
         <activity
             android:name=".VoiceLockActivity"
             android:excludeFromRecents="true"
@@ -40,6 +42,31 @@
             android:showWhenLocked="true"
             android:theme="@style/Theme.VoiceLockScreen.LockOverlay"
             android:turnScreenOn="true" />
+
+        <!-- Solution 2: Picovoice Porcupine & Eagle Demo Activity -->
+        <activity
+            android:name=".PicovoiceDemoActivity"
+            android:exported="false" />
+
+        <!-- Solution 3: Azure Speaker Verification Demo Activity -->
+        <activity
+            android:name=".AzureSpeakerDemoActivity"
+            android:exported="false" />
+
+        <!-- Solution 4: Custom GPU FastAPI Demo Activity -->
+        <activity
+            android:name=".CustomBackendDemoActivity"
+            android:exported="false" />
+
+        <!-- Solution 5: Native Android OS STT Demo Activity -->
+        <activity
+            android:name=".NativeSpeechRecognizerDemoActivity"
+            android:exported="false" />
+
+        <!-- Solution 6: Challenge-Response Biometrics Demo Activity -->
+        <activity
+            android:name=".ChallengeResponseDemoActivity"
+            android:exported="false" />
 
         <!-- Foreground Service -->
         <service

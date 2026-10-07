@@ -30,6 +30,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnGrantOverlay: Button
     private lateinit var btnTestLock: Button
 
+    private lateinit var btnDemoSol1: Button
+    private lateinit var btnDemoSol2: Button
+    private lateinit var btnDemoSol3: Button
+    private lateinit var btnDemoSol4: Button
+    private lateinit var btnDemoSol5: Button
+    private lateinit var btnDemoSol6: Button
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -44,6 +51,13 @@ class MainActivity : AppCompatActivity() {
         btnGrantAudio = findViewById(R.id.btn_grant_audio)
         btnGrantOverlay = findViewById(R.id.btn_grant_overlay)
         btnTestLock = findViewById(R.id.btn_test_lock)
+
+        btnDemoSol1 = findViewById(R.id.btn_demo_sol1)
+        btnDemoSol2 = findViewById(R.id.btn_demo_sol2)
+        btnDemoSol3 = findViewById(R.id.btn_demo_sol3)
+        btnDemoSol4 = findViewById(R.id.btn_demo_sol4)
+        btnDemoSol5 = findViewById(R.id.btn_demo_sol5)
+        btnDemoSol6 = findViewById(R.id.btn_demo_sol6)
 
         loadSettings()
         checkPermissionsAndStatus()
@@ -70,12 +84,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnTestLock.setOnClickListener {
-            if (checkAudioPermission() && checkOverlayPermission()) {
-                val intent = Intent(this, VoiceLockActivity::class.java)
-                startActivity(intent)
-            } else {
-                Toast.makeText(this, R.string.msg_grant_perms_first, Toast.LENGTH_LONG).show()
-            }
+            launchVoiceLockDemo()
+        }
+
+        btnDemoSol1.setOnClickListener { launchVoiceLockDemo() }
+        btnDemoSol2.setOnClickListener { startActivity(Intent(this, PicovoiceDemoActivity::class.java)) }
+        btnDemoSol3.setOnClickListener { startActivity(Intent(this, AzureSpeakerDemoActivity::class.java)) }
+        btnDemoSol4.setOnClickListener { startActivity(Intent(this, CustomBackendDemoActivity::class.java)) }
+        btnDemoSol5.setOnClickListener { startActivity(Intent(this, NativeSpeechRecognizerDemoActivity::class.java)) }
+        btnDemoSol6.setOnClickListener { startActivity(Intent(this, ChallengeResponseDemoActivity::class.java)) }
+    }
+
+    private fun launchVoiceLockDemo() {
+        if (checkAudioPermission() && checkOverlayPermission()) {
+            val intent = Intent(this, VoiceLockActivity::class.java)
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, R.string.msg_grant_perms_first, Toast.LENGTH_LONG).show()
         }
     }
 
