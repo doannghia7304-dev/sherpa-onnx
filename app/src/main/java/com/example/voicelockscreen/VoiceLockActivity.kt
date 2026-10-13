@@ -1,6 +1,7 @@
 package com.example.voicelockscreen
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.SharedPreferences
@@ -18,6 +19,7 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -27,6 +29,7 @@ import androidx.core.app.ActivityCompat
 import com.k2fsa.sherpa.onnx.KeywordSpotter
 import com.k2fsa.sherpa.onnx.OnlineStream
 import kotlin.concurrent.thread
+import kotlin.math.sqrt
 
 class VoiceLockActivity : AppCompatActivity() {
     private lateinit var prefs: SharedPreferences
@@ -35,6 +38,8 @@ class VoiceLockActivity : AppCompatActivity() {
     private lateinit var tvStatus: TextView
     private lateinit var tvLiveResult: TextView
     private lateinit var btnFallbackPin: Button
+    private lateinit var pbMicLevel: ProgressBar
+    private lateinit var tvMicLevel: TextView
 
     private var kws: KeywordSpotter? = null
     private var stream: OnlineStream? = null
@@ -49,7 +54,7 @@ class VoiceLockActivity : AppCompatActivity() {
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
     private val audioFormat = AudioFormat.ENCODING_PCM_16BIT
 
-    private var targetPassphrase: String = "OPEN PHONE"
+    private var targetPassphrase: String = "MỞ KHÓA"
     private var savedPin: String = "1234"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,8 +72,10 @@ class VoiceLockActivity : AppCompatActivity() {
         tvStatus = findViewById(R.id.tv_status)
         tvLiveResult = findViewById(R.id.tv_live_result)
         btnFallbackPin = findViewById(R.id.btn_fallback_pin)
+        pbMicLevel = findViewById(R.id.pb_mic_level)
+        tvMicLevel = findViewById(R.id.tv_mic_level)
 
-        tvSayPassphrase.text = getString(R.string.say_passphrase_format, targetPassphrase)
+        tvSayPassphrase.text = "Nói khẩu lệnh: \"$targetPassphrase\""
 
         setupBackPressedBlocking()
 
@@ -76,22 +83,22 @@ class VoiceLockActivity : AppCompatActivity() {
             showPinFallbackDialog()
         }
 
-        initVoiceEngineAndStartRecording()
+        checkPermissionAndStartEngine()
     }
 
     private fun setupLockOverlayFlags() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
-        } else {
-            @Suppress("DEPRECATION")
-            window.addFlags(
-                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                        WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-            )
         }
+        @Suppress("DEPRECATION")
+        window.addFlags(
+            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN
+        )
     }
 
     private fun setupBackPressedBlocking() {
@@ -106,17 +113,42 @@ class VoiceLockActivity : AppCompatActivity() {
         })
     }
 
+    private fun checkPermissionAndStartEngine() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            tvStatus.text = getString(R.string.err_no_record_audio_perm)
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                REQUEST_RECORD_AUDIO_CODE
+            )
+        } else {
+            initVoiceEngineAndStartRecording()
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_RECORD_AUDIO_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                initVoiceEngineAndStartRecording()
+            } else {
+                tvStatus.text = getString(R.string.err_no_record_audio_perm)
+                Toast.makeText(this, R.string.msg_audio_perm_denied, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
     private fun initVoiceEngineAndStartRecording() {
         try {
-            if (ActivityCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.RECORD_AUDIO
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                tvStatus.text = getString(R.string.err_no_record_audio_perm)
-                return
-            }
-
             val hasModel = ModelManager.isModelInAssets(this)
             if (!hasModel) {
                 tvStatus.text = getString(R.string.err_no_model_assets)
@@ -128,7 +160,7 @@ class VoiceLockActivity : AppCompatActivity() {
             kws = KeywordSpotter(assetManager = application.assets, config = config)
             val localKws = kws ?: return
 
-            stream = localKws.createStream(targetPassphrase)
+            stream = localKws.createStream("")
             val localStream = stream
 
             if (localStream == null || localStream.ptr == 0L) {
@@ -139,12 +171,23 @@ class VoiceLockActivity : AppCompatActivity() {
 
             val minBufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat)
             audioRecord = AudioRecord(
-                MediaRecorder.AudioSource.MIC,
+                MediaRecorder.AudioSource.VOICE_RECOGNITION,
                 sampleRateInHz,
                 channelConfig,
                 audioFormat,
-                minBufferSize * 2
+                minBufferSize * 4
             )
+
+            if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
+                Log.e(TAG, "AudioRecord failed to initialize with VOICE_RECOGNITION source, trying MIC fallback")
+                audioRecord = AudioRecord(
+                    MediaRecorder.AudioSource.MIC,
+                    sampleRateInHz,
+                    channelConfig,
+                    audioFormat,
+                    minBufferSize * 4
+                )
+            }
 
             if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
                 Log.e(TAG, "AudioRecord failed to initialize")
@@ -159,7 +202,7 @@ class VoiceLockActivity : AppCompatActivity() {
                 processAudioSamples(localKws, localStream)
             }
 
-            tvStatus.text = getString(R.string.listening_status)
+            tvStatus.text = "Sherpa-ONNX KWS: Đang lắng nghe từ Micro..."
             Log.i(TAG, "Started voice recognition successfully")
 
         } catch (e: Throwable) {
@@ -176,6 +219,13 @@ class VoiceLockActivity : AppCompatActivity() {
         while (isRecording) {
             val ret = audioRecord?.read(buffer, 0, buffer.size) ?: 0
             if (ret > 0) {
+                val rms = calculateRMS(buffer, ret)
+
+                runOnUiThread {
+                    pbMicLevel.progress = rms.toInt().coerceIn(0, 5000)
+                    tvMicLevel.text = "Âm lượng Micro: ${rms.toInt()}"
+                }
+
                 val samples = FloatArray(ret) { buffer[it] / 32768.0f }
                 localStream.acceptWaveform(samples, sampleRate = sampleRateInHz)
 
@@ -186,10 +236,9 @@ class VoiceLockActivity : AppCompatActivity() {
 
                     if (keyword.isNotBlank()) {
                         localKws.reset(localStream)
-                        Log.i(TAG, "Detected keyword: $keyword")
+                        Log.i(TAG, "Sherpa-ONNX detected keyword: $keyword")
 
                         runOnUiThread {
-                            tvLiveResult.text = getString(R.string.recognized_format, keyword)
                             checkPassphraseAndUnlock(keyword)
                         }
                     }
@@ -199,12 +248,28 @@ class VoiceLockActivity : AppCompatActivity() {
         Log.i(TAG, "Audio recording loop ended")
     }
 
-    private fun checkPassphraseAndUnlock(detectedKeyword: String) {
-        val cleanDetected = detectedKeyword.uppercase().trim()
-        val cleanTarget = targetPassphrase.uppercase().trim()
+    private fun calculateRMS(buffer: ShortArray, readSize: Int): Double {
+        var sum = 0.0
+        for (i in 0 until readSize) {
+            sum += (buffer[i] * buffer[i]).toDouble()
+        }
+        val mean = sum / readSize
+        return sqrt(mean)
+    }
 
-        if (cleanDetected.contains(cleanTarget) || cleanTarget.contains(cleanDetected) || cleanDetected.isNotBlank()) {
+    private fun checkPassphraseAndUnlock(detectedKeyword: String) {
+        Log.i(TAG, "Comparing detectedKeyword '$detectedKeyword' with targetPassphrase '$targetPassphrase'")
+
+        val isMatch = StringUtils.isPassphraseMatch(detectedKeyword, targetPassphrase)
+
+        if (isMatch) {
+            tvLiveResult.text = "Từ nhận diện: \"$detectedKeyword\" (Khớp mật khẩu!)"
+            tvStatus.text = "MẬT KHẨU ĐÚNG: MỞ KHÓA THÀNH CÔNG!"
             unlockSuccess()
+        } else {
+            tvLiveResult.text = "Từ nhận diện: \"$detectedKeyword\" (Cần nói '$targetPassphrase')"
+            tvStatus.text = "MẬT KHẨU SAI - KHÔNG THỂ MỞ KHÓA!"
+            vibrateDevice(150)
         }
     }
 
@@ -236,7 +301,6 @@ class VoiceLockActivity : AppCompatActivity() {
     }
 
     private fun unlockSuccess() {
-        tvStatus.text = getString(R.string.unlocked_success)
         vibrateDevice(100)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
@@ -293,7 +357,8 @@ class VoiceLockActivity : AppCompatActivity() {
         private const val PREFS_NAME = "VoiceLockPrefs"
         private const val PREF_KEY_PASSPHRASE = "passphrase"
         private const val PREF_KEY_PIN = "pin"
-        private const val DEFAULT_PASSPHRASE = "OPEN PHONE"
+        private const val DEFAULT_PASSPHRASE = "MỞ KHÓA"
         private const val DEFAULT_PIN = "1234"
+        private const val REQUEST_RECORD_AUDIO_CODE = 201
     }
 }

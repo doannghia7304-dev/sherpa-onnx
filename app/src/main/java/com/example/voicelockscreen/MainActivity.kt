@@ -36,6 +36,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnDemoSol4: Button
     private lateinit var btnDemoSol5: Button
     private lateinit var btnDemoSol6: Button
+    private lateinit var btnDemoSol7: Button
+    private lateinit var btnDemoSol8: Button
+    private lateinit var btnDemoSol9: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +61,9 @@ class MainActivity : AppCompatActivity() {
         btnDemoSol4 = findViewById(R.id.btn_demo_sol4)
         btnDemoSol5 = findViewById(R.id.btn_demo_sol5)
         btnDemoSol6 = findViewById(R.id.btn_demo_sol6)
+        btnDemoSol7 = findViewById(R.id.btn_demo_sol7)
+        btnDemoSol8 = findViewById(R.id.btn_demo_sol8)
+        btnDemoSol9 = findViewById(R.id.btn_demo_sol9)
 
         loadSettings()
         checkPermissionsAndStatus()
@@ -89,10 +95,13 @@ class MainActivity : AppCompatActivity() {
 
         btnDemoSol1.setOnClickListener { launchVoiceLockDemo() }
         btnDemoSol2.setOnClickListener { startActivity(Intent(this, PicovoiceDemoActivity::class.java)) }
-        btnDemoSol3.setOnClickListener { startActivity(Intent(this, AzureSpeakerDemoActivity::class.java)) }
-        btnDemoSol4.setOnClickListener { startActivity(Intent(this, CustomBackendDemoActivity::class.java)) }
-        btnDemoSol5.setOnClickListener { startActivity(Intent(this, NativeSpeechRecognizerDemoActivity::class.java)) }
-        btnDemoSol6.setOnClickListener { startActivity(Intent(this, ChallengeResponseDemoActivity::class.java)) }
+        btnDemoSol3.setOnClickListener { startActivity(Intent(this, CustomBackendDemoActivity::class.java)) }
+        btnDemoSol4.setOnClickListener { startActivity(Intent(this, NativeSpeechRecognizerDemoActivity::class.java)) }
+        btnDemoSol5.setOnClickListener { startActivity(Intent(this, ChallengeResponseDemoActivity::class.java)) }
+        btnDemoSol6.setOnClickListener { startActivity(Intent(this, VoskDemoActivity::class.java)) }
+        btnDemoSol7.setOnClickListener { startActivity(Intent(this, TFLiteAudioDemoActivity::class.java)) }
+        btnDemoSol8.setOnClickListener { startActivity(Intent(this, PocketSphinxDemoActivity::class.java)) }
+        btnDemoSol9.setOnClickListener { startActivity(Intent(this, SileroVadDemoActivity::class.java)) }
     }
 
     private fun launchVoiceLockDemo() {
@@ -225,7 +234,7 @@ class MainActivity : AppCompatActivity() {
         private const val PREF_KEY_PASSPHRASE = "passphrase"
         private const val PREF_KEY_PIN = "pin"
         private const val PREF_KEY_SERVICE_ENABLED = "service_enabled"
-        private const val DEFAULT_PASSPHRASE = "OPEN PHONE"
+        private const val DEFAULT_PASSPHRASE = "MỞ KHÓA"
         private const val DEFAULT_PIN = "1234"
         private const val MIN_PIN_LENGTH = 4
         private const val REQUEST_AUDIO_PERMISSION = 101

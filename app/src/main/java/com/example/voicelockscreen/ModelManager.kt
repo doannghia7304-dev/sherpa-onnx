@@ -6,7 +6,6 @@ import com.k2fsa.sherpa.onnx.FeatureConfig
 import com.k2fsa.sherpa.onnx.KeywordSpotterConfig
 import com.k2fsa.sherpa.onnx.OnlineModelConfig
 import com.k2fsa.sherpa.onnx.OnlineTransducerModelConfig
-import java.io.File
 
 object ModelManager {
     private const val TAG = "ModelManager"
@@ -15,27 +14,19 @@ object ModelManager {
     fun isModelInAssets(context: Context): Boolean {
         return try {
             val files = context.assets.list(MODEL_DIR) ?: emptyArray()
-            val hasEncoder = files.any { it.contains("encoder") && it.endsWith(".onnx") }
-            val hasDecoder = files.any { it.contains("decoder") && it.endsWith(".onnx") }
-            val hasJoiner = files.any { it.contains("joiner") && it.endsWith(".onnx") }
+            val hasEncoder = files.contains("encoder-epoch-12-avg-2-chunk-16-left-64.onnx")
+            val hasDecoder = files.contains("decoder-epoch-12-avg-2-chunk-16-left-64.onnx")
+            val hasJoiner = files.contains("joiner-epoch-12-avg-2-chunk-16-left-64.onnx")
             val hasTokens = files.contains("tokens.txt")
-            hasEncoder && hasDecoder && hasJoiner && hasTokens
+            val hasKeywords = files.contains("keywords.txt")
+            hasEncoder && hasDecoder && hasJoiner && hasTokens && hasKeywords
         } catch (e: Exception) {
             Log.e(TAG, "Error checking assets model", e)
             false
         }
     }
 
-    fun prepareCustomKeywordsFile(context: Context, keywordsStr: String): File {
-        val keywordsFile = File(context.filesDir, "custom_keywords.txt")
-        val formattedKeywords = keywordsStr.replace("/", "\n").trim()
-        keywordsFile.writeText(formattedKeywords)
-        Log.i(TAG, "Written custom keywords to ${keywordsFile.absolutePath}: $formattedKeywords")
-        return keywordsFile
-    }
-
     fun getKeywordSpotterConfig(context: Context, passphrase: String): KeywordSpotterConfig {
-        val keywordsFile = prepareCustomKeywordsFile(context, passphrase)
         val featConfig = FeatureConfig(sampleRate = 16000, featureDim = 80)
 
         val modelConfig = OnlineModelConfig(
@@ -53,9 +44,9 @@ object ModelManager {
         return KeywordSpotterConfig(
             featConfig = featConfig,
             modelConfig = modelConfig,
-            keywordsFile = keywordsFile.absolutePath,
-            keywordsScore = 1.2f,
-            keywordsThreshold = 0.2f
+            keywordsFile = "$MODEL_DIR/keywords.txt",
+            keywordsScore = 1.0f,
+            keywordsThreshold = 0.15f
         )
     }
 }
