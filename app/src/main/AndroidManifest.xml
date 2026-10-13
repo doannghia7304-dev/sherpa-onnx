@@ -33,7 +33,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Solution 1: Lock Screen Overlay Activity (Sherpa-ONNX) -->
+        <!-- Solution 1: Lock Overlay Activity (Sherpa-ONNX) -->
         <activity
             android:name=".VoiceLockActivity"
             android:excludeFromRecents="true"
@@ -43,30 +43,85 @@
             android:theme="@style/Theme.VoiceLockScreen.LockOverlay"
             android:turnScreenOn="true" />
 
-        <!-- Solution 2: Picovoice Porcupine & Eagle Demo Activity -->
+        <!-- Solution 2: Picovoice Demo Lock Overlay -->
         <activity
             android:name=".PicovoiceDemoActivity"
-            android:exported="false" />
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:theme="@style/Theme.VoiceLockScreen.LockOverlay"
+            android:turnScreenOn="true" />
 
-        <!-- Solution 3: Azure Speaker Verification Demo Activity -->
-        <activity
-            android:name=".AzureSpeakerDemoActivity"
-            android:exported="false" />
-
-        <!-- Solution 4: Custom GPU FastAPI Demo Activity -->
+        <!-- Solution 3: Custom GPU FastAPI Demo Lock Overlay -->
         <activity
             android:name=".CustomBackendDemoActivity"
-            android:exported="false" />
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:theme="@style/Theme.VoiceLockScreen.LockOverlay"
+            android:turnScreenOn="true" />
 
-        <!-- Solution 5: Native Android OS STT Demo Activity -->
+        <!-- Solution 4: Native Android OS STT Demo Lock Overlay -->
         <activity
             android:name=".NativeSpeechRecognizerDemoActivity"
-            android:exported="false" />
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:theme="@style/Theme.VoiceLockScreen.LockOverlay"
+            android:turnScreenOn="true" />
 
-        <!-- Solution 6: Challenge-Response Biometrics Demo Activity -->
+        <!-- Solution 5: Challenge-Response Biometrics Demo Lock Overlay -->
         <activity
             android:name=".ChallengeResponseDemoActivity"
-            android:exported="false" />
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:theme="@style/Theme.VoiceLockScreen.LockOverlay"
+            android:turnScreenOn="true" />
+
+        <!-- Solution 6: Vosk Mobile Speech SDK Lock Overlay -->
+        <activity
+            android:name=".VoskDemoActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:theme="@style/Theme.VoiceLockScreen.LockOverlay"
+            android:turnScreenOn="true" />
+
+        <!-- Solution 7: TensorFlow Lite Audio Task Lock Overlay -->
+        <activity
+            android:name=".TFLiteAudioDemoActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:theme="@style/Theme.VoiceLockScreen.LockOverlay"
+            android:turnScreenOn="true" />
+
+        <!-- Solution 8: PocketSphinx Android Lock Overlay -->
+        <activity
+            android:name=".PocketSphinxDemoActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:theme="@style/Theme.VoiceLockScreen.LockOverlay"
+            android:turnScreenOn="true" />
+
+        <!-- Solution 9: Silero VAD + ONNX Lock Overlay -->
+        <activity
+            android:name=".SileroVadDemoActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:theme="@style/Theme.VoiceLockScreen.LockOverlay"
+            android:turnScreenOn="true" />
 
         <!-- Foreground Service -->
         <service

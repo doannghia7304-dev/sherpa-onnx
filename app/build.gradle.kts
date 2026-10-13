@@ -51,6 +51,12 @@ dependencies {
     // Sherpa-ONNX Android Library (includes JNI .so libraries)
     implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx:v1.13.8")
 
+    // Vosk Mobile Speech Recognition SDK (Alpha Cephei)
+    implementation("com.alphacephei:vosk-android:0.3.75")
+
+    // TensorFlow Lite Audio Task SDK (Google TFLite On-Device Speech Classification)
+    implementation("org.tensorflow:tensorflow-lite-task-audio:0.4.4")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

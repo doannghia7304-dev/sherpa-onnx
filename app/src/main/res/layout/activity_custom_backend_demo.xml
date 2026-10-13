@@ -16,7 +16,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/solution4_title"
+            android:text="@string/solution3_title"
             android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
-            android:text="Tự deploy Server FastAPI + SpeechBrain ResNet trên VPS/Cloud GPU"
+            android:text="Custom GPU Server (FastAPI + PyTorch ResNet50 / SpeechBrain)"
             android:textColor="@color/text_secondary"
             android:textSize="14sp" />
 
@@ -34,16 +34,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:hint="Backend URL (FastAPI Endpoint)"
+            android:hint="Backend Server Endpoint URL"
             android:textColorHint="@color/text_secondary"
             app:boxBackgroundColor="@color/card_bg"
+            app:boxCornerRadiusBottomEnd="10dp"
+            app:boxCornerRadiusBottomStart="10dp"
+            app:boxCornerRadiusTopEnd="10dp"
+            app:boxCornerRadiusTopStart="10dp"
             app:boxStrokeColor="@color/primary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_backend_url"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="http://10.0.2.2:8000/api/v1/verify-speaker"
+                android:text="http://192.168.1.100:8000/verify"
                 android:textColor="@color/white" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -52,9 +56,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="Mô hình ResNet50 / SpeechBrain trên Server GPU"
+            android:background="@drawable/bg_badge_ok"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:text="Màn hình đã khóa! Hãy nói MỞ KHÓA..."
             android:textColor="@color/primary"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <Button
@@ -62,20 +70,24 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:backgroundTint="@color/primary"
-            android:text="Gửi PCM WAV Tới FastAPI Server"
-            android:textColor="@color/dark_bg" />
+            android:background="@drawable/bg_btn_primary"
+            android:padding="12dp"
+            android:text="Bật Micro Xác Thực FastAPI GPU"
+            android:textColor="@color/dark_bg"
+            android:textStyle="bold" />
 
     </LinearLayout>
 
     <Button
-        android:id="@+id/btn_close_backend"
+        android:id="@+id/btn_fallback_pin"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:text="@string/btn_cancel"
-        android:textColor="@color/text_secondary"
-        app:strokeColor="@color/text_secondary" />
+        android:background="@drawable/bg_btn_outlined"
+        android:padding="12dp"
+        android:text="@string/enter_pin"
+        android:textColor="@color/primary"
+        app:strokeWidth="0dp" />
 
 </RelativeLayout>

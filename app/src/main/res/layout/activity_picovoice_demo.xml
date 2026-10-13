@@ -33,8 +33,8 @@
         <FrameLayout
             android:layout_width="120dp"
             android:layout_height="120dp"
-            android:layout_marginTop="30dp"
-            android:background="@color/card_bg">
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_mic_container">
 
             <ImageView
                 android:layout_width="50dp"
@@ -45,14 +45,37 @@
                 app:tint="@color/primary" />
         </FrameLayout>
 
+        <!-- Live Audio Level Meter -->
+        <ProgressBar
+            android:id="@+id/pb_pico_mic_level"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="160dp"
+            android:layout_height="8dp"
+            android:layout_marginTop="12dp"
+            android:max="5000"
+            android:progressDrawable="@drawable/bg_progress_mic" />
+
+        <TextView
+            android:id="@+id/tv_pico_mic_level"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Âm lượng Micro: 0"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
         <TextView
             android:id="@+id/tv_pico_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Picovoice Engine: Sẵn sàng (Latency &lt; 150ms)"
-            android:textColor="@color/accent_green"
-            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_badge_ok"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:text="Màn hình đã khóa! Hãy nói MỞ KHÓA..."
+            android:textColor="@color/primary"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <TextView
@@ -62,29 +85,33 @@
             android:layout_marginTop="12dp"
             android:gravity="center"
             android:minHeight="40dp"
-            android:text="Nói: 'Porcupine' để nhận diện Wake-Word + Speaker Profile"
+            android:text="Cần nói đúng mật khẩu: 'MỞ KHÓA'"
             android:textColor="@color/white"
-            android:textSize="16sp" />
+            android:textSize="15sp" />
 
         <Button
             android:id="@+id/btn_pico_test"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:backgroundTint="@color/primary"
-            android:text="Mô Phỏng Nhận Diện Picovoice"
-            android:textColor="@color/dark_bg" />
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_btn_primary"
+            android:padding="12dp"
+            android:text="Bật Micro Nhận Diện Picovoice"
+            android:textColor="@color/dark_bg"
+            android:textStyle="bold" />
 
     </LinearLayout>
 
     <Button
-        android:id="@+id/btn_close_pico"
+        android:id="@+id/btn_fallback_pin"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:text="@string/btn_cancel"
-        android:textColor="@color/text_secondary"
-        app:strokeColor="@color/text_secondary" />
+        android:background="@drawable/bg_btn_outlined"
+        android:padding="12dp"
+        android:text="@string/enter_pin"
+        android:textColor="@color/primary"
+        app:strokeWidth="0dp" />
 
 </RelativeLayout>
