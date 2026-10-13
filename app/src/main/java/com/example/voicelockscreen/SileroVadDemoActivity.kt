@@ -14,12 +14,16 @@ import android.os.VibratorManager
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
+import android.view.LayoutInflater
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import java.util.Locale
@@ -34,6 +38,7 @@ class SileroVadDemoActivity : AppCompatActivity() {
     private var speechRecognizer: SpeechRecognizer? = null
     private var prefs: SharedPreferences? = null
     private var targetPassphrase: String = "MỞ KHÓA"
+    private var savedPin: String = "1234"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,19 +49,16 @@ class SileroVadDemoActivity : AppCompatActivity() {
 
         prefs = getSharedPreferences("VoiceLockPrefs", Context.MODE_PRIVATE)
         targetPassphrase = prefs?.getString("passphrase", "MỞ KHÓA")?.uppercase() ?: "MỞ KHÓA"
+        savedPin = prefs?.getString("pin", "1234") ?: "1234"
 
         tvStatus = findViewById(R.id.tv_vad_status)
         tvResult = findViewById(R.id.tv_vad_result)
         pbMicLevel = findViewById(R.id.pb_vad_mic_level)
         tvMicLevel = findViewById(R.id.tv_vad_mic_level)
         btnTest = findViewById(R.id.btn_vad_test)
-        val btnClose = findViewById<Button>(R.id.btn_close_vad)
+        val btnFallbackPin = findViewById<Button>(R.id.btn_fallback_pin)
 
         tvResult.text = "Cần nói đúng mật khẩu: \"$targetPassphrase\""
-
-        if (SpeechRecognizer.isRecognitionAvailable(this)) {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-        }
 
         setupBackPressedBlocking()
 
@@ -64,12 +66,36 @@ class SileroVadDemoActivity : AppCompatActivity() {
             checkPermissionAndStartVad()
         }
 
-        btnClose.setOnClickListener {
-            speechRecognizer?.stopListening()
-            finish()
+        btnFallbackPin.setOnClickListener {
+            showPinFallbackDialog()
         }
 
         checkPermissionAndStartVad()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        enableLockTaskMode()
+    }
+
+    private fun enableLockTaskMode() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                startLockTask()
+            }
+        } catch (e: Exception) {
+            // ignore
+        }
+    }
+
+    private fun disableLockTaskMode() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                stopLockTask()
+            }
+        } catch (e: Exception) {
+            // ignore
+        }
     }
 
     private fun setupLockOverlayFlags() {
@@ -117,8 +143,18 @@ class SileroVadDemoActivity : AppCompatActivity() {
 
     private fun startVadVoiceRecognition() {
         if (speechRecognizer == null) {
-            Toast.makeText(this, "SpeechRecognizer không khả dụng", Toast.LENGTH_SHORT).show()
-            return
+            if (SpeechRecognizer.isRecognitionAvailable(this)) {
+                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+            } else {
+                Toast.makeText(this, "SpeechRecognizer không khả dụng", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
+        try {
+            speechRecognizer?.cancel()
+        } catch (e: Exception) {
+            // ignore
         }
 
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -145,7 +181,17 @@ class SileroVadDemoActivity : AppCompatActivity() {
                 tvStatus.text = "Silero VAD: Đã cắt đoạn âm giọng nói sạch và gửi nhận diện..."
             }
             override fun onError(error: Int) {
-                tvStatus.text = "Lỗi nhận diện VAD (Mã $error). Hãy thử lại!"
+                Log.w("SileroVAD", "SpeechRecognizer error: $error")
+                when (error) {
+                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> {
+                        tvStatus.text = "Đang đặt lại Micro..."
+                        speechRecognizer?.cancel()
+                        window.decorView.postDelayed({ startVadVoiceRecognition() }, 300)
+                    }
+                    else -> {
+                        tvStatus.text = "Chờ tín hiệu giọng nói (Mã $error). Hãy bấm nói lại!"
+                    }
+                }
             }
             override fun onResults(results: Bundle?) {
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
@@ -157,10 +203,7 @@ class SileroVadDemoActivity : AppCompatActivity() {
 
                 if (isMatch) {
                     tvStatus.text = "SILERO VAD VERIFIED: MỞ KHÓA THÀNH CÔNG!"
-                    vibrateDevice(100)
-                    dismissKeyguard()
-                    Toast.makeText(this@SileroVadDemoActivity, "Silero VAD: Mở khóa thành công!", Toast.LENGTH_SHORT).show()
-                    finish()
+                    unlockSuccess()
                 } else {
                     tvStatus.text = "MẬT KHẨU SAI - KHÔNG THỂ MỞ KHÓA!\nBạn vừa nói: \"$spokenText\" (Cần nói: \"$targetPassphrase\")"
                     vibrateDevice(150)
@@ -172,6 +215,41 @@ class SileroVadDemoActivity : AppCompatActivity() {
         })
 
         speechRecognizer?.startListening(intent)
+    }
+
+    private fun showPinFallbackDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_pin_fallback, null)
+        val etPin = dialogView.findViewById<EditText>(R.id.et_dialog_pin)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        dialogView.findViewById<Button>(R.id.btn_cancel_pin).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<Button>(R.id.btn_confirm_pin).setOnClickListener {
+            val enteredPin = etPin.text.toString().trim()
+            if (enteredPin == savedPin) {
+                dialog.dismiss()
+                unlockSuccess()
+            } else {
+                Toast.makeText(this, R.string.pin_incorrect, Toast.LENGTH_SHORT).show()
+                vibrateDevice(200)
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun unlockSuccess() {
+        disableLockTaskMode()
+        vibrateDevice(100)
+        dismissKeyguard()
+        Toast.makeText(this, "Mở khóa thành công!", Toast.LENGTH_SHORT).show()
+        finish()
     }
 
     private fun dismissKeyguard() {
@@ -199,6 +277,7 @@ class SileroVadDemoActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        disableLockTaskMode()
         speechRecognizer?.destroy()
     }
 }

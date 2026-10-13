@@ -14,6 +14,7 @@ import android.os.VibratorManager
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.WindowManager
 import android.widget.Button
@@ -58,10 +59,6 @@ class PicovoiceDemoActivity : AppCompatActivity() {
         val btnFallbackPin = findViewById<Button>(R.id.btn_fallback_pin)
 
         tvResult.text = "Cần nói đúng khẩu lệnh: \"$targetPassphrase\""
-
-        if (SpeechRecognizer.isRecognitionAvailable(this)) {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-        }
 
         setupBackPressedBlocking()
 
@@ -146,8 +143,18 @@ class PicovoiceDemoActivity : AppCompatActivity() {
 
     private fun startLiveVoiceRecognition() {
         if (speechRecognizer == null) {
-            Toast.makeText(this, "SpeechRecognizer không khả dụng", Toast.LENGTH_SHORT).show()
-            return
+            if (SpeechRecognizer.isRecognitionAvailable(this)) {
+                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+            } else {
+                Toast.makeText(this, "SpeechRecognizer không khả dụng", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
+        try {
+            speechRecognizer?.cancel()
+        } catch (e: Exception) {
+            // ignore
         }
 
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -174,7 +181,23 @@ class PicovoiceDemoActivity : AppCompatActivity() {
                 tvStatus.text = "Đang trích xuất Porcupine Wake-Word & Eagle Voiceprint..."
             }
             override fun onError(error: Int) {
-                tvStatus.text = "Lỗi nhận diện (Mã $error). Hãy bấm nói lại!"
+                Log.w("PicovoiceDemo", "SpeechRecognizer error: $error")
+                when (error) {
+                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> {
+                        tvStatus.text = "Đang đặt lại Micro..."
+                        speechRecognizer?.cancel()
+                        window.decorView.postDelayed({ startLiveVoiceRecognition() }, 300)
+                    }
+                    SpeechRecognizer.ERROR_NO_MATCH -> {
+                        tvStatus.text = "Chưa nghe rõ giọng nói. Hãy bấm nói lại!"
+                    }
+                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
+                        tvStatus.text = "Hết thời gian chờ giọng nói. Hãy bấm nói lại!"
+                    }
+                    else -> {
+                        tvStatus.text = "Chờ tín hiệu giọng nói (Mã $error). Hãy bấm nói lại!"
+                    }
+                }
             }
             override fun onResults(results: Bundle?) {
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)

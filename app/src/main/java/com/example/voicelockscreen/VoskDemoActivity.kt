@@ -11,11 +11,14 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import org.json.JSONObject
@@ -35,6 +38,7 @@ class VoskDemoActivity : AppCompatActivity(), RecognitionListener {
     private var speechService: SpeechService? = null
     private var prefs: SharedPreferences? = null
     private var targetPassphrase: String = "MỞ KHÓA"
+    private var savedPin: String = "1234"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,11 +49,12 @@ class VoskDemoActivity : AppCompatActivity(), RecognitionListener {
 
         prefs = getSharedPreferences("VoiceLockPrefs", Context.MODE_PRIVATE)
         targetPassphrase = prefs?.getString("passphrase", "MỞ KHÓA")?.uppercase() ?: "MỞ KHÓA"
+        savedPin = prefs?.getString("pin", "1234") ?: "1234"
 
         tvStatus = findViewById(R.id.tv_vosk_status)
         tvResult = findViewById(R.id.tv_vosk_result)
         btnTest = findViewById(R.id.btn_vosk_test)
-        val btnClose = findViewById<Button>(R.id.btn_close_vosk)
+        val btnFallbackPin = findViewById<Button>(R.id.btn_fallback_pin)
 
         tvResult.text = "Cần nói đúng mật khẩu: \"$targetPassphrase\""
 
@@ -59,12 +64,36 @@ class VoskDemoActivity : AppCompatActivity(), RecognitionListener {
             checkPermissionAndStartVosk()
         }
 
-        btnClose.setOnClickListener {
-            stopVoskService()
-            finish()
+        btnFallbackPin.setOnClickListener {
+            showPinFallbackDialog()
         }
 
         checkPermissionAndStartVosk()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        enableLockTaskMode()
+    }
+
+    private fun enableLockTaskMode() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                startLockTask()
+            }
+        } catch (e: Exception) {
+            // ignore
+        }
+    }
+
+    private fun disableLockTaskMode() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                stopLockTask()
+            }
+        } catch (e: Exception) {
+            // ignore
+        }
     }
 
     private fun setupLockOverlayFlags() {
@@ -170,11 +199,7 @@ class VoskDemoActivity : AppCompatActivity(), RecognitionListener {
 
                 if (isMatch) {
                     tvStatus.text = "VOSK SDK VERIFIED: MỞ KHÓA THÀNH CÔNG!"
-                    vibrateDevice(100)
-                    dismissKeyguard()
-                    Toast.makeText(this, "Vosk SDK: Mở khóa thành công!", Toast.LENGTH_SHORT).show()
-                    stopVoskService()
-                    finish()
+                    unlockSuccess()
                 } else {
                     tvStatus.text = "MẬT KHẨU SAI - KHÔNG THỂ MỞ KHÓA!\nBạn vừa nói: \"$text\" (Cần nói: \"$targetPassphrase\")"
                     vibrateDevice(150)
@@ -184,6 +209,42 @@ class VoskDemoActivity : AppCompatActivity(), RecognitionListener {
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing Vosk hypothesis", e)
         }
+    }
+
+    private fun showPinFallbackDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_pin_fallback, null)
+        val etPin = dialogView.findViewById<EditText>(R.id.et_dialog_pin)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        dialogView.findViewById<Button>(R.id.btn_cancel_pin).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<Button>(R.id.btn_confirm_pin).setOnClickListener {
+            val enteredPin = etPin.text.toString().trim()
+            if (enteredPin == savedPin) {
+                dialog.dismiss()
+                unlockSuccess()
+            } else {
+                Toast.makeText(this, R.string.pin_incorrect, Toast.LENGTH_SHORT).show()
+                vibrateDevice(200)
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun unlockSuccess() {
+        disableLockTaskMode()
+        vibrateDevice(100)
+        dismissKeyguard()
+        Toast.makeText(this, "Vosk SDK: Mở khóa thành công!", Toast.LENGTH_SHORT).show()
+        stopVoskService()
+        finish()
     }
 
     private fun dismissKeyguard() {
@@ -217,6 +278,7 @@ class VoskDemoActivity : AppCompatActivity(), RecognitionListener {
 
     override fun onDestroy() {
         super.onDestroy()
+        disableLockTaskMode()
         stopVoskService()
     }
 

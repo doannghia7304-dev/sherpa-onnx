@@ -14,11 +14,15 @@ import android.os.VibratorManager
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
+import android.view.LayoutInflater
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import java.util.Locale
@@ -31,6 +35,7 @@ class PocketSphinxDemoActivity : AppCompatActivity() {
     private var speechRecognizer: SpeechRecognizer? = null
     private var prefs: SharedPreferences? = null
     private var targetPassphrase: String = "MỞ KHÓA"
+    private var savedPin: String = "1234"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,17 +46,14 @@ class PocketSphinxDemoActivity : AppCompatActivity() {
 
         prefs = getSharedPreferences("VoiceLockPrefs", Context.MODE_PRIVATE)
         targetPassphrase = prefs?.getString("passphrase", "MỞ KHÓA")?.uppercase() ?: "MỞ KHÓA"
+        savedPin = prefs?.getString("pin", "1234") ?: "1234"
 
         tvStatus = findViewById(R.id.tv_sphinx_status)
         tvResult = findViewById(R.id.tv_sphinx_result)
         btnTest = findViewById(R.id.btn_sphinx_test)
-        val btnClose = findViewById<Button>(R.id.btn_close_sphinx)
+        val btnFallbackPin = findViewById<Button>(R.id.btn_fallback_pin)
 
         tvResult.text = "Cần nói đúng mật khẩu: \"$targetPassphrase\""
-
-        if (SpeechRecognizer.isRecognitionAvailable(this)) {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-        }
 
         setupBackPressedBlocking()
 
@@ -59,12 +61,36 @@ class PocketSphinxDemoActivity : AppCompatActivity() {
             checkPermissionAndStartSphinx()
         }
 
-        btnClose.setOnClickListener {
-            speechRecognizer?.stopListening()
-            finish()
+        btnFallbackPin.setOnClickListener {
+            showPinFallbackDialog()
         }
 
         checkPermissionAndStartSphinx()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        enableLockTaskMode()
+    }
+
+    private fun enableLockTaskMode() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                startLockTask()
+            }
+        } catch (e: Exception) {
+            // ignore
+        }
+    }
+
+    private fun disableLockTaskMode() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                stopLockTask()
+            }
+        } catch (e: Exception) {
+            // ignore
+        }
     }
 
     private fun setupLockOverlayFlags() {
@@ -112,8 +138,18 @@ class PocketSphinxDemoActivity : AppCompatActivity() {
 
     private fun startSphinxVoiceRecognition() {
         if (speechRecognizer == null) {
-            Toast.makeText(this, "SpeechRecognizer không khả dụng", Toast.LENGTH_SHORT).show()
-            return
+            if (SpeechRecognizer.isRecognitionAvailable(this)) {
+                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+            } else {
+                Toast.makeText(this, "SpeechRecognizer không khả dụng", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
+        try {
+            speechRecognizer?.cancel()
+        } catch (e: Exception) {
+            // ignore
         }
 
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -136,7 +172,17 @@ class PocketSphinxDemoActivity : AppCompatActivity() {
                 tvStatus.text = "PocketSphinx Decoder: Đang đối chiếu JSGF Grammar..."
             }
             override fun onError(error: Int) {
-                tvStatus.text = "Lỗi nhận diện PocketSphinx (Mã $error). Hãy thử lại!"
+                Log.w("SphinxDemo", "SpeechRecognizer error: $error")
+                when (error) {
+                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> {
+                        tvStatus.text = "Đang đặt lại Micro..."
+                        speechRecognizer?.cancel()
+                        window.decorView.postDelayed({ startSphinxVoiceRecognition() }, 300)
+                    }
+                    else -> {
+                        tvStatus.text = "Chờ tín hiệu giọng nói (Mã $error). Hãy bấm nói lại!"
+                    }
+                }
             }
             override fun onResults(results: Bundle?) {
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
@@ -148,10 +194,7 @@ class PocketSphinxDemoActivity : AppCompatActivity() {
 
                 if (isMatch) {
                     tvStatus.text = "POCKETSPHINX VERIFIED: MỞ KHÓA THÀNH CÔNG!"
-                    vibrateDevice(100)
-                    dismissKeyguard()
-                    Toast.makeText(this@PocketSphinxDemoActivity, "PocketSphinx: Mở khóa thành công!", Toast.LENGTH_SHORT).show()
-                    finish()
+                    unlockSuccess()
                 } else {
                     tvStatus.text = "MẬT KHẨU SAI - KHÔNG THỂ MỞ KHÓA!\nBạn vừa nói: \"$spokenText\" (Cần nói: \"$targetPassphrase\")"
                     vibrateDevice(150)
@@ -163,6 +206,41 @@ class PocketSphinxDemoActivity : AppCompatActivity() {
         })
 
         speechRecognizer?.startListening(intent)
+    }
+
+    private fun showPinFallbackDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_pin_fallback, null)
+        val etPin = dialogView.findViewById<EditText>(R.id.et_dialog_pin)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        dialogView.findViewById<Button>(R.id.btn_cancel_pin).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<Button>(R.id.btn_confirm_pin).setOnClickListener {
+            val enteredPin = etPin.text.toString().trim()
+            if (enteredPin == savedPin) {
+                dialog.dismiss()
+                unlockSuccess()
+            } else {
+                Toast.makeText(this, R.string.pin_incorrect, Toast.LENGTH_SHORT).show()
+                vibrateDevice(200)
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun unlockSuccess() {
+        disableLockTaskMode()
+        vibrateDevice(100)
+        dismissKeyguard()
+        Toast.makeText(this, "Mở khóa thành công!", Toast.LENGTH_SHORT).show()
+        finish()
     }
 
     private fun dismissKeyguard() {
@@ -190,6 +268,7 @@ class PocketSphinxDemoActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        disableLockTaskMode()
         speechRecognizer?.destroy()
     }
 }

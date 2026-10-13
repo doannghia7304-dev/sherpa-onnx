@@ -14,6 +14,7 @@ import android.os.VibratorManager
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.WindowManager
 import android.widget.Button
@@ -51,10 +52,6 @@ class CustomBackendDemoActivity : AppCompatActivity() {
         tvStatus = findViewById(R.id.tv_backend_status)
         btnVerify = findViewById(R.id.btn_backend_verify)
         val btnFallbackPin = findViewById<Button>(R.id.btn_fallback_pin)
-
-        if (SpeechRecognizer.isRecognitionAvailable(this)) {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-        }
 
         setupBackPressedBlocking()
 
@@ -139,8 +136,18 @@ class CustomBackendDemoActivity : AppCompatActivity() {
 
     private fun startBackendLiveRecognition() {
         if (speechRecognizer == null) {
-            Toast.makeText(this, "SpeechRecognizer không khả dụng", Toast.LENGTH_SHORT).show()
-            return
+            if (SpeechRecognizer.isRecognitionAvailable(this)) {
+                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+            } else {
+                Toast.makeText(this, "SpeechRecognizer không khả dụng", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
+        try {
+            speechRecognizer?.cancel()
+        } catch (e: Exception) {
+            // ignore
         }
 
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -163,7 +170,17 @@ class CustomBackendDemoActivity : AppCompatActivity() {
                 tvStatus.text = "Đã thu âm! Đang gửi Multipart HTTP POST -> ${etBackendUrl.text}..."
             }
             override fun onError(error: Int) {
-                tvStatus.text = "Lỗi thu âm giọng nói (Mã lỗi: $error). Hãy thử lại!"
+                Log.w("CustomBackendDemo", "SpeechRecognizer error: $error")
+                when (error) {
+                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> {
+                        tvStatus.text = "Đang đặt lại Micro..."
+                        speechRecognizer?.cancel()
+                        window.decorView.postDelayed({ startBackendLiveRecognition() }, 300)
+                    }
+                    else -> {
+                        tvStatus.text = "Chờ tín hiệu giọng nói (Mã $error). Hãy bấm nói lại!"
+                    }
+                }
             }
             override fun onResults(results: Bundle?) {
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
