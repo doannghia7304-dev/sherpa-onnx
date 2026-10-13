@@ -250,7 +250,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/solution_select_prompt"
-                    android:textColor="@color/white"
+                    android:textColor="@color/text_secondary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -264,7 +264,7 @@
                     android:gravity="start|center_vertical"
                     android:padding="12dp"
                     android:text="@string/solution1_title"
-                    android:textColor="@color/primary"
+                    android:textColor="@color/white"
                     app:strokeWidth="0dp" />
 
                 <Button
@@ -329,7 +329,7 @@
                     android:gravity="start|center_vertical"
                     android:padding="12dp"
                     android:text="@string/solution6_title"
-                    android:textColor="@color/primary"
+                    android:textColor="@color/white"
                     app:strokeWidth="0dp" />
 
                 <Button
@@ -368,7 +368,7 @@
                     android:gravity="start|center_vertical"
                     android:padding="12dp"
                     android:text="@string/solution9_title"
-                    android:textColor="@color/primary"
+                    android:textColor="@color/white"
                     app:strokeWidth="0dp" />
 
             </LinearLayout>
