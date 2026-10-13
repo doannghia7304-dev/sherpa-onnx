@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dark_bg"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/solution2_title"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="On-Device Commercial SDK (Porcupine Wake-Word + Eagle Speaker Verification)"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
+
+        <FrameLayout
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="30dp"
+            android:background="@color/card_bg">
+
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/mic_icon_desc"
+                android:src="@android:drawable/ic_btn_speak_now"
+                app:tint="@color/primary" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tv_pico_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Picovoice Engine: Sẵn sàng (Latency &lt; 150ms)"
+            android:textColor="@color/accent_green"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_pico_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:minHeight="40dp"
+            android:text="Nói: 'Porcupine' để nhận diện Wake-Word + Speaker Profile"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/btn_pico_test"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="@color/primary"
+            android:text="Mô Phỏng Nhận Diện Picovoice"
+            android:textColor="@color/dark_bg" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_close_pico"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:text="@string/btn_cancel"
+        android:textColor="@color/text_secondary"
+        app:strokeColor="@color/text_secondary" />
+
+</RelativeLayout>
